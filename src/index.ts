@@ -17,6 +17,15 @@ import {randomUUID} from 'crypto';
     const publisherSockets = new Set<WebSocket>();
     const subscriberSockets = new Set<WebSocket>();
 
+    ['SIGINT', 'SIGTERM', 'SIGQUIT'].forEach(signal => process.on(signal, () => {
+        [
+            ...Array.from(subscriberSockets.values()),
+            ...Array.from(publisherSockets.values()),
+        ].forEach(socket => socket.close());
+
+        process.exit();
+    }));
+
     function generateSecureUrl(request: Request, role: 'publisher' | 'subscriber'): string | null {
         const isKeyValid = request.headers['secret-key'] === expectedKey;
         if (!isKeyValid) {
